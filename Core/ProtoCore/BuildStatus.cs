@@ -436,9 +436,9 @@ namespace ProtoCore
             // Create a default console output stream, and this can 
             // be overwritten in IDE by assigning it a different value.
             this.MessageHandler = new ConsoleOutputStream();
-            if (core.Options.WebRunner)
+            if (compilestate.Options.WebRunner)
             {
-                this.WebMsgHandler = new WebOutputStream(core);
+                this.WebMsgHandler = new WebOutputStream(compilestate);
             }
         }
 

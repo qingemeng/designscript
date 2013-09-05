@@ -15,11 +15,170 @@ using Autodesk.DesignScript.Interfaces;
 
 namespace ProtoLanguage
 {
+
+    public enum ExecutionMode
+    {
+        Parallel,
+        Serial
+    }
+
+    public class CompileOptions
+    {
+        public CompileOptions()
+        {
+            DumpByteCode = false;
+            Verbose = false;
+
+            FullSSA = false;
+            DumpIL = false;
+
+            DumpFunctionResolverLogic = false;
+            DumpOperatorToMethodByteCode = false;
+            SuppressBuildOutput = false;
+            BuildOptWarningAsError = false;
+            BuildOptErrorAsWarning = false;
+            ExecutionMode = ProtoLanguage.ExecutionMode.Serial;
+            IDEDebugMode = false;
+            WatchTestMode = false;
+            IncludeDirectories = new List<string>();
+
+            // defaults to 6 decimal places
+            //
+            FormatToPrintFloatingPoints = "F6";
+            RootCustomPropertyFilterPathName = @"C:\arxapiharness\Bin\AcDesignScript\CustomPropertyFilter.txt";
+            CompileToLib = false;
+            AssocOperatorAsMethod = true;
+
+            EnableProcNodeSanityCheck = true;
+            EnableReturnTypeCheck = true;
+
+            RootModulePathName = Path.GetFullPath(@".");
+            staticCycleCheck = true;
+            dynamicCycleCheck = true;
+            RecursionChecking = false;
+            EmitBreakpoints = true;
+
+            localDependsOnGlobalSet = false;
+            LHSGraphNodeUpdate = true;
+            TempReplicationGuideEmptyFlag = true;
+            AssociativeToImperativePropagation = true;
+            SuppressFunctionResolutionWarning = true;
+            EnableVariableAccumulator = true;
+            WebRunner = false;
+            DisableDisposeFunctionDebug = true;
+            GenerateExprID = true;
+            IsDeltaExecution = false;
+            ElementBasedArrayUpdate = true;
+
+        }
+
+
+        public bool DumpByteCode { get; set; }
+        public bool DumpIL { get; private set; }
+        public bool FullSSA { get; set; }
+        public bool Verbose { get; set; }
+        public bool DumpOperatorToMethodByteCode { get; set; }
+        public bool SuppressBuildOutput { get; set; }
+        public bool BuildOptWarningAsError { get; set; }
+        public bool BuildOptErrorAsWarning { get; set; }
+        public bool IDEDebugMode { get; set; }      //set to true if two way mapping b/w DesignScript and JIL code is needed
+        public bool WatchTestMode { get; set; }     // set to true when running automation tests for expression interpreter
+        public ExecutionMode ExecutionMode { get; set; }
+        public string FormatToPrintFloatingPoints { get; set; }
+        public bool CompileToLib { get; set; }
+        public bool AssocOperatorAsMethod { get; set; }
+        public string LibPath { get; set; }
+        public bool staticCycleCheck { get; set; }
+        public bool dynamicCycleCheck { get; set; }
+        public bool RecursionChecking { get; set; }
+        public bool DumpFunctionResolverLogic { get; set; }
+        public bool EmitBreakpoints { get; set; }
+        public bool localDependsOnGlobalSet { get; set; }
+        public bool LHSGraphNodeUpdate { get; set; }
+        public bool SuppressFunctionResolutionWarning { get; set; }
+        public bool WebRunner { get; set; }
+
+        public bool TempReplicationGuideEmptyFlag { get; set; }
+        public bool AssociativeToImperativePropagation { get; set; }
+        public bool EnableVariableAccumulator { get; set; }
+        public bool DisableDisposeFunctionDebug { get; set; }
+        public bool GenerateExprID { get; set; }
+        public bool IsDeltaExecution { get; set; }
+        public bool ElementBasedArrayUpdate { get; set; }
+
+
+        // This is being moved to Core.Options as this needs to be overridden for the Watch test framework runner        
+        public int kDynamicCycleThreshold = 2000;
+
+        public double Tolerance
+        {
+            get { return ProtoCore.Utils.MathUtils.Tolerance; }
+            set { ProtoCore.Utils.MathUtils.Tolerance = value; }
+        }
+
+        public List<string> IncludeDirectories { get; set; }
+        public string RootModulePathName { get; set; }
+
+        private string rootCustomPropertyFilterPathName;
+        public string RootCustomPropertyFilterPathName
+        {
+            get
+            {
+                return rootCustomPropertyFilterPathName;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    rootCustomPropertyFilterPathName = null;
+                }
+                else
+                {
+                    var fileName = value;
+                    if (System.IO.File.Exists(fileName))
+                    {
+                        rootCustomPropertyFilterPathName = fileName;
+
+                        System.IO.StreamReader stream = null;
+                        try
+                        {
+                            stream = new System.IO.StreamReader(fileName);
+                        }
+                        catch (System.Exception ex)
+                        {
+                            throw new System.IO.FileLoadException(string.Format("Custom property filter file {0} can't be read. Error Message:{1}", fileName, ex.Message));
+                        }
+                        finally
+                        {
+                            if (stream != null)
+                            {
+                                stream.Dispose();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        //throw new System.IO.FileNotFoundException(string.Format("Custom property filter file {0} does not exists", fileName));
+                        rootCustomPropertyFilterPathName = null;
+                    }
+                }
+            }
+        }
+
+        public bool EnableReturnTypeCheck { get; set; }
+
+        public bool EnableProcNodeSanityCheck { get; set; }
+
+    }
+
     public class CompileStateTracker
     {
         public const int FIRST_CORE_ID = 0;
 
         public int ID { get; private set; }
+
+        public bool compileSucceeded { get; set; }
+
         //recurtion
         public List<FunctionCounter> recursivePoint { get; set; }
         public List<FunctionCounter> funcCounterTable { get; set; }
@@ -103,7 +262,7 @@ namespace ProtoLanguage
 
         public List<Instruction> Breakpoints { get; set; }
 
-        public Options Options { get; private set; }
+        public CompileOptions Options { get; private set; }
         public BuildStatus BuildStatus { get; private set; }
 
         public TypeSystem TypeSystem { get; set; }
@@ -128,20 +287,6 @@ namespace ProtoLanguage
         internal ContextDataManager ContextDataManager { get; set; }
 
         public ParseMode ParsingMode { get; set; }
-
-        //public FFIPropertyChangedMonitor FFIPropertyChangedMonitor { get; private set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="data"></param>
-        //public void AddContextData(Dictionary<string, Object> data)
-        //{
-        //    if (data == null)
-        //        return;
-
-        //    ContextDataManager.GetInstance(this).AddData(data);
-        //}
 
 
         // Cached replication guides for the current call. 
@@ -365,6 +510,8 @@ namespace ProtoLanguage
         // All properties require reset except for the runtime memory
         public void ResetForDeltaExecution()
         {
+            compileSucceeded = false;
+
             ClassIndex = ProtoCore.DSASM.Constants.kInvalidIndex;
 
 
@@ -476,6 +623,8 @@ namespace ProtoLanguage
 
         public void ResetForPrecompilation()
         {
+            compileSucceeded = false;
+
             GraphNodeUID = 0;
             CodeBlockIndex = 0;
             RuntimeTableIndex = 0;
@@ -512,8 +661,10 @@ namespace ProtoLanguage
             ExpressionUID = 0;
         }
 
-        private void ResetAll(Options options)
+        private void ResetAll(CompileOptions options)
         {
+            compileSucceeded = false;
+
             ProtoCore.Utils.Validity.AssertExpiry();
             Options = options;
             Executives = new Dictionary<ProtoCore.Language, ProtoCore.Executive>();
@@ -681,7 +832,7 @@ namespace ProtoLanguage
             }
         }
 
-        public CompileStateTracker(Options options)
+        public CompileStateTracker(CompileOptions options)
         {
             ResetAll(options);
         }

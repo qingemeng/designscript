@@ -52,8 +52,6 @@ namespace ProtoScript.Runners
 
         public bool Compile(string code, ProtoCore.Core core, out int blockId)
         {
-            //ProtoLanguage.CompileStateTracker compileState = new ProtoLanguage.CompileStateTracker(core.Options);
-
             bool buildSucceeded = false;
 
             core.ExecMode = ProtoCore.DSASM.InterpreterMode.kNormal;
@@ -89,6 +87,48 @@ namespace ProtoScript.Runners
             }
 
             return buildSucceeded;
+        }
+
+
+        public ProtoLanguage.CompileStateTracker Compile(string code, out int blockId)
+        {
+
+            ProtoLanguage.CompileOptions opts = new ProtoLanguage.CompileOptions();
+            opts.ExecutionMode = ProtoLanguage.ExecutionMode.Serial;
+
+            ProtoLanguage.CompileStateTracker compileState = new ProtoLanguage.CompileStateTracker(opts);
+            compileState.Executives.Add(ProtoCore.Language.kAssociative, new ProtoAssociative.Executive(compileState));
+            compileState.Executives.Add(ProtoCore.Language.kImperative, new ProtoImperative.Executive(compileState));
+            compileState.ExecMode = ProtoCore.DSASM.InterpreterMode.kNormal;
+
+            blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
+            try
+            {
+                //defining the global Assoc block that wraps the entire .ds source file
+                ProtoCore.LanguageCodeBlock globalBlock = new ProtoCore.LanguageCodeBlock();
+                globalBlock.language = ProtoCore.Language.kAssociative;
+                globalBlock.body = code;
+                //the wrapper block can be given a unique id to identify it as the global scope
+                globalBlock.id = ProtoCore.LanguageCodeBlock.OUTERMOST_BLOCK_ID;
+
+
+                //passing the global Assoc wrapper block to the compiler
+                ProtoCore.CompileTime.Context context = new ProtoCore.CompileTime.Context();
+                ProtoCore.Language id = globalBlock.language;
+                compileState.Executives[id].Compile(out blockId, null, globalBlock, context, EventSink);
+
+                compileState.BuildStatus.ReportBuildResult();
+
+                int errors = 0;
+                int warnings = 0;
+                compileState.compileSucceeded = compileState.BuildStatus.GetBuildResult(out errors, out warnings);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+
+            return compileState;
         }
 
 
@@ -256,8 +296,10 @@ namespace ProtoScript.Runners
         public ExecutionMirror Execute(string code, ProtoCore.Core core, bool isTest = true)
         {
             int blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
-            bool succeeded = Compile(code, core, out blockId);
-            if (succeeded)
+
+            //bool succeeded = Compile(code, core, out blockId);
+            ProtoLanguage.CompileStateTracker compileState = Compile(code, out blockId);
+            if (compileState.compileSucceeded)
             {
                 core.GenerateExecutable();
                 core.Rmem.PushGlobFrame(core.GlobOffset);

@@ -6,7 +6,8 @@ namespace ProtoImperative
 {
 	public class Executive : ProtoCore.Executive
 	{
-		public Executive(ProtoCore.Core core) : base(core)
+        public Executive(ProtoLanguage.CompileStateTracker compilerState)
+            : base(compilerState)
 		{
 		}
 
@@ -16,13 +17,13 @@ namespace ProtoImperative
             blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
 
             bool buildSucceeded = false;
-            bool isLanguageSignValid = isLanguageSignValid = core.Langverify.Verify(langBlock);
+            bool isLanguageSignValid = isLanguageSignValid = compilerState.Langverify.Verify(langBlock);
 
             if (isLanguageSignValid)
             {
                 try
                 {
-                    ProtoImperative.CodeGen codegen = new ProtoImperative.CodeGen(core, parentBlock);
+                    ProtoImperative.CodeGen codegen = new ProtoImperative.CodeGen(compilerState, parentBlock);
 
                     //(Fuqiang, Ayush) : The below code is to parse an Imperative code block. An imoerative code block should
                     // never need to be parsed at this stage, as it would be parsed by the Assoc parser.
@@ -52,7 +53,7 @@ namespace ProtoImperative
 
                 int errors = 0;
                 int warnings = 0;
-                buildSucceeded = core.BuildStatus.GetBuildResult(out errors, out warnings);
+                buildSucceeded = compilerState.BuildStatus.GetBuildResult(out errors, out warnings);
             }
             return buildSucceeded;
         }
