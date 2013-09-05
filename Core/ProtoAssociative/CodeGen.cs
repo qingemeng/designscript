@@ -92,7 +92,8 @@ namespace ProtoAssociative
         
         // This constructor is only called for Preloading of assemblies and 
         // precompilation of CodeBlockNode nodes in GraphUI for global language blocks - pratapa
-        public CodeGen(Core coreObj) : base(coreObj)
+        public CodeGen(ProtoLanguage.CompileStateTracker compileState)
+            : base(compileState)
         {
             Validity.Assert(compileStateTracker.IsParsingPreloadedAssembly || compileStateTracker.IsParsingCodeBlockNode);
 
@@ -129,7 +130,7 @@ namespace ProtoAssociative
             unPopulatedClasses = new Dictionary<int, ClassDeclNode>();
         }
 
-        public CodeGen(Core coreObj, ProtoCore.DSASM.CodeBlock parentBlock = null) : base(coreObj, parentBlock)
+        public CodeGen(ProtoLanguage.CompileStateTracker compileState, ProtoCore.DSASM.CodeBlock parentBlock = null) : base(compileState, parentBlock)
         {
             classOffset = 0;
 
@@ -8844,30 +8845,30 @@ namespace ProtoAssociative
 
     public class NodeBuilder
     {
-        private ProtoCore.Core core { get; set; }
+        private ProtoLanguage.CompileStateTracker compileState{ get; set; }
 
-        public NodeBuilder(ProtoCore.Core protocore)
+        public NodeBuilder(ProtoLanguage.CompileStateTracker compileState)
         {
-            core = protocore;
+            this.compileState = compileState;
         }
 
         public AssociativeNode BuildIdentfier(string name, PrimitiveType type = PrimitiveType.kTypeVar)
         {
             var ident = new ProtoCore.AST.AssociativeAST.IdentifierNode();
             ident.Name = ident.Value = name;
-            ident.datatype = core.TypeSystem.BuildTypeObject(type, false);
+            ident.datatype = compileState.TypeSystem.BuildTypeObject(type, false);
 
             return ident;
         }
 
         public AssociativeNode BuildTempVariable()
         {
-            return BuildIdentfier(core.GenerateTempVar(), PrimitiveType.kTypeVar);
+            return BuildIdentfier(compileState.GenerateTempVar(), PrimitiveType.kTypeVar);
         }
 
         public AssociativeNode BuildTempPropertyVariable()
         {
-            return BuildIdentfier(core.GenerateTempPropertyVar(), PrimitiveType.kTypeVar);
+            return BuildIdentfier(compileState.GenerateTempPropertyVar(), PrimitiveType.kTypeVar);
         }
 
         public AssociativeNode BuildReturn()
@@ -8891,11 +8892,11 @@ namespace ProtoAssociative
             binaryExpr.Optr = op;
             binaryExpr.RightNode = rightNode;
 
-            if (core.Options.GenerateExprID)
+            if (compileState.Options.GenerateExprID)
             {
-                binaryExpr.exprUID = core.ExpressionUID;
+                binaryExpr.exprUID = compileState.ExpressionUID;
             }
-            ++core.ExpressionUID;
+            ++compileState.ExpressionUID;
 
             return binaryExpr;
         }

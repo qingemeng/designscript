@@ -5,12 +5,12 @@ namespace ProtoCore
 	public abstract class Executive
 	{
         //protected Core core; 
-        protected ProtoLanguage.CompileStateTracker compilerState;
+        protected ProtoLanguage.CompileStateTracker compileState;
 
         public Executive(ProtoLanguage.CompileStateTracker compilerState)
 		{
             System.Diagnostics.Debug.Assert(compilerState != null);
-            this.compilerState = compilerState;
+            this.compileState = compilerState;
 		}
 
         public ProtoCore.DSASM.Executive CurrentDSASMExec { get; set; }

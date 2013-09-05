@@ -317,7 +317,10 @@ namespace ProtoLanguage
         /// </summary>
         public ReasonForExecutionSuspend ReasonForExecutionSuspend { get; internal set; }
 
+        public delegate void DisposeDelegate(ProtoLanguage.CompileStateTracker sender);
+        public event DisposeDelegate Dispose;
         public event EventHandler<ExecutionStateEventArgs> ExecutionEvent;
+
 
         public int ExecutionState { get; set; }
 
