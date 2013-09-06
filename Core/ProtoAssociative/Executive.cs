@@ -9,12 +9,17 @@ namespace ProtoAssociative
 	public class Executive : ProtoCore.Executive
 	{
 
-        public Executive(ProtoLanguage.CompileStateTracker compileState)
-            : base(compileState)
+        public Executive()
+            : base(null)
 		{
 		}
 
-        public override bool Compile(out int blockId, ProtoCore.DSASM.CodeBlock parentBlock, ProtoCore.LanguageCodeBlock langBlock, ProtoCore.CompileTime.Context callContext, ProtoCore.DebugServices.EventSink sink, ProtoCore.AST.Node codeBlockNode, ProtoCore.AssociativeGraph.GraphNode graphNode = null)
+        public Executive(ProtoCore.Core core)
+            : base(core)
+        {
+        }
+
+        public override bool Compile(ProtoLanguage.CompileStateTracker compileState, out int blockId, ProtoCore.DSASM.CodeBlock parentBlock, ProtoCore.LanguageCodeBlock langBlock, ProtoCore.CompileTime.Context callContext, ProtoCore.DebugServices.EventSink sink, ProtoCore.AST.Node codeBlockNode, ProtoCore.AssociativeGraph.GraphNode graphNode = null)
         {
             Debug.Assert(langBlock != null);
             blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
@@ -40,11 +45,11 @@ namespace ProtoAssociative
                             {
                                 // We reuse the existing toplevel CodeBlockList's for the procedureTable's 
                                 // by calling this overloaded constructor - pratapa
-                                compileState.assocCodegen = new ProtoAssociative.CodeGen(this.compileState);
+                                compileState.assocCodegen = new ProtoAssociative.CodeGen(compileState);
                             }
                         }
                         else
-                            compileState.assocCodegen = new ProtoAssociative.CodeGen(this.compileState, parentBlock);
+                            compileState.assocCodegen = new ProtoAssociative.CodeGen(compileState, parentBlock);
                     }
 
                     if (null != compileState.AssocNode)
@@ -63,7 +68,7 @@ namespace ProtoAssociative
                         {
                             System.IO.MemoryStream memstream = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(langBlock.body));
                             ProtoCore.DesignScriptParser.Scanner s = new ProtoCore.DesignScriptParser.Scanner(memstream);
-                            ProtoCore.DesignScriptParser.Parser p = new ProtoCore.DesignScriptParser.Parser(s, core, compileState.builtInsLoaded);
+                            ProtoCore.DesignScriptParser.Parser p = new ProtoCore.DesignScriptParser.Parser(s, compileState, compileState.builtInsLoaded);
                             p.Parse();
 
                             // TODO Jun: Set this flag inside a persistent object
@@ -80,7 +85,7 @@ namespace ProtoAssociative
                             if (!compileState.builtInsLoaded)
                             {
                                 // Load the built-in methods manually
-                                ProtoCore.Utils.CoreUtils.InsertPredefinedAndBuiltinMethods(core, codeBlockNode, false);
+                                ProtoCore.Utils.CoreUtils.InsertPredefinedAndBuiltinMethods(compileState, codeBlockNode, false);
                                 compileState.builtInsLoaded = true;
                             }
                         }
@@ -149,9 +154,9 @@ namespace ProtoAssociative
         public override ProtoCore.DSASM.StackValue Execute(int codeblock, int entry, ProtoCore.Runtime.Context callContext, ProtoCore.DebugServices.EventSink sink)
         {
             ProtoCore.DSASM.StackValue sv = new ProtoCore.DSASM.StackValue();
-            if (!compileState.Options.CompileToLib)
+            if (!core.Options.CompileToLib)
             {
-                ProtoCore.DSASM.Interpreter interpreter = new ProtoCore.DSASM.Interpreter(this.compileState);
+                ProtoCore.DSASM.Interpreter interpreter = new ProtoCore.DSASM.Interpreter(core);
                 CurrentDSASMExec = interpreter.runtime;
                 sv = interpreter.Run(codeblock, entry, Language.kAssociative);
             }

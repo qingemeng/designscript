@@ -11,6 +11,7 @@ namespace ProtoScript.Runners
     public class ExpressionInterpreterRunner
     {
         private ProtoCore.Core Core;
+        private ProtoLanguage.CompileStateTracker compileState; 
         private readonly ProtoCore.DebugServices.EventSink EventSink = new ProtoCore.DebugServices.ConsoleEventSink();
 
         public ExpressionInterpreterRunner(ProtoCore.Core core)
@@ -23,13 +24,16 @@ namespace ProtoScript.Runners
         {
             bool buildSucceeded = false;
             blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
+
+            compileState = ProtoScript.CompilerUtils.BuildDefaultCompilerState();
+
             try
             {
                 //defining the global Assoc block that wraps the entire .ds source file
                 ProtoCore.LanguageCodeBlock globalBlock = new ProtoCore.LanguageCodeBlock();
                 globalBlock.language = ProtoCore.Language.kAssociative;
-                //globalBlock.language = ProtoCore.Language.kImperative;
                 globalBlock.body = code;
+
                 //the wrapper block can be given a unique id to identify it as the global scope
                 globalBlock.id = ProtoCore.LanguageCodeBlock.OUTERMOST_BLOCK_ID;
 
@@ -38,13 +42,13 @@ namespace ProtoScript.Runners
                 ProtoCore.CompileTime.Context context = new ProtoCore.CompileTime.Context();
                 ProtoCore.Language id = globalBlock.language;
 
-                Core.ExprInterpreterExe.iStreamCanvas = new InstructionStream(globalBlock.language, Core);
+                compileState.ExprInterpreterExe.iStreamCanvas = new InstructionStream(globalBlock.language, compileState);
 
                 // Save the global offset and restore after compilation
                 int offsetRestore = Core.GlobOffset;
                 Core.GlobOffset = Core.Rmem.Stack.Count;
-                
-                Core.Executives[id].Compile(out blockId, null, globalBlock, context, EventSink);
+
+                compileState.Executives[id].Compile(compileState, out blockId, null, globalBlock, context, EventSink);
 
                 // Restore the global offset
                 Core.GlobOffset = offsetRestore;
@@ -99,7 +103,9 @@ namespace ProtoScript.Runners
 
                 //a2. Record the old start PC for restore instructions
                 Core.startPC = Core.ExprInterpreterExe.instrStreamList[blockId].instrList.Count;
-                Core.GenerateExprExeInstructions(blockId);
+
+                compileState.GenerateExprExeInstructions(blockId);
+                Core.ExprInterpreterExe = compileState.ExprInterpreterExe; 
                 
                 //a3. Record the old running block
                 int restoreBlock = Core.RunningBlock;

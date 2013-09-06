@@ -53,7 +53,9 @@ namespace ProtoImperative
                 ProtoCore.Language.kImperative,
                 compileStateTracker.CodeBlockIndex, 
                 new ProtoCore.DSASM.SymbolTable("imperative lang block", compileStateTracker.RuntimeTableIndex),
-                new ProtoCore.DSASM.ProcedureTable(compileStateTracker.RuntimeTableIndex), false, coreObj);
+                new ProtoCore.DSASM.ProcedureTable(compileStateTracker.RuntimeTableIndex), 
+                false, 
+                compileStateTracker);
 
             ++compileStateTracker.CodeBlockIndex;
             ++compileStateTracker.RuntimeTableIndex;
@@ -1250,9 +1252,11 @@ namespace ProtoImperative
                 }
 
                 if (globalProcIndex != ProtoCore.DSASM.Constants.kInvalidIndex && compileStateTracker.ProcNode == null)
+                {
                     compileStateTracker.ProcNode = codeBlock.procedureTable.procList[globalProcIndex];
+                }
 
-                compileStateTracker.Executives[langblock.codeblock.language].Compile(out blockId, codeBlock, langblock.codeblock, context, codeBlock.EventSink, langblock.CodeBlockNode);
+                compileStateTracker.Executives[langblock.codeblock.language].Compile(compileStateTracker, out blockId, codeBlock, langblock.codeblock, context, codeBlock.EventSink, langblock.CodeBlockNode);
 
                 if (propogateUpdateGraphNode != null)
                 {
@@ -3609,25 +3613,25 @@ namespace ProtoImperative
 
     public class NodeBuilder
     {
-        private ProtoCore.Core core { get; set; }
+        private ProtoLanguage.CompileStateTracker compileState { get; set; }
 
-        public NodeBuilder(ProtoCore.Core protocore)
+        public NodeBuilder(ProtoLanguage.CompileStateTracker compileState)
         {
-            core = protocore;
+            this.compileState = compileState;
         }
 
         public ImperativeNode BuildIdentfier(string name, PrimitiveType type = PrimitiveType.kTypeVar)
         {
             var ident = new IdentifierNode();
             ident.Name = ident.Value = name;
-            ident.datatype = core.TypeSystem.BuildTypeObject(type, false);
+            ident.datatype = compileState.TypeSystem.BuildTypeObject(type, false);
 
             return ident;
         }
 
         public ImperativeNode BuildTempVariable()
         {
-            return BuildIdentfier(core.GenerateTempVar(), PrimitiveType.kTypeVar);
+            return BuildIdentfier(compileState.GenerateTempVar(), PrimitiveType.kTypeVar);
         }
 
         public ImperativeNode BuildReturn()

@@ -16,19 +16,15 @@ namespace ProtoCore
         public abstract class MirrorObject
         {
             protected ProtoCore.Core core = null;
-            protected static ProtoCore.Core staticCore = null;
+            protected static ProtoLanguage.CompileStateTracker staticcompileState = null;
 
             protected MirrorObject() { }
             
-            //protected MirrorObject(ProtoCore.Core core)
-            //{
-            //    this.core = core;
-            //}
 
-            protected MirrorObject(ProtoCore.Core core, ProtoCore.Core staticCore = null)
+            protected MirrorObject(ProtoCore.Core core, ProtoLanguage.CompileStateTracker compileState = null)
             {
                 this.core = core;
-                MirrorObject.staticCore = staticCore;
+                MirrorObject.staticcompileState = compileState;
             }
         }
 
@@ -70,7 +66,7 @@ namespace ProtoCore
             /// </summary>
             /// <param name="mirrorData"></param>
             /// <param name="core"></param>
-            public RuntimeMirror(MirrorData mirrorData, ProtoCore.Core core, ProtoCore.Core staticCore = null) : base(core, staticCore)
+            public RuntimeMirror(MirrorData mirrorData, ProtoCore.Core core, ProtoLanguage.CompileStateTracker compileState = null) : base(core, compileState)
             {
                 Validity.Assert(this.core != null);
                 TargetExecutive = core.CurrentExecutive.CurrentDSASMExec;
@@ -325,7 +321,7 @@ namespace ProtoCore
 
         public abstract class StaticMirror : MirrorObject
         {
-            //protected static ProtoCore.Core staticCore = null;
+            //protected static ProtoCore.Core staticcompileState = null;
 
             protected static int numBuiltInMethods = 0;
             private static List<MethodMirror> builtInMethods = null;
@@ -342,9 +338,9 @@ namespace ProtoCore
 
             protected StaticMirror() { }
 
-            protected StaticMirror(ProtoCore.Core core)
+            protected StaticMirror(ProtoLanguage.CompileStateTracker compileState)
             {
-                MirrorObject.staticCore = core;
+                MirrorObject.staticcompileState = compileState;
             }
 
             protected static MethodMirror FindMethod(string methodName, List<ProtoCore.Type> arguments, List<ProcedureNode> procNodes)
@@ -374,13 +370,13 @@ namespace ProtoCore
 
             private static List<MethodMirror> GetBuiltInMethods()
             {
-                Validity.Assert(staticCore != null);
+                Validity.Assert(staticcompileState != null);
 
-                Validity.Assert(staticCore.CodeBlockList.Count > 0);
+                Validity.Assert(staticcompileState.CodeBlockList.Count > 0);
 
                 if (builtInMethods == null)
                 {
-                    List<ProcedureNode> procNodes = staticCore.CodeBlockList[0].procedureTable.procList;
+                    List<ProcedureNode> procNodes = staticcompileState.CodeBlockList[0].procedureTable.procList;
                     numBuiltInMethods = procNodes.Count;
                     //List<ProcedureNode> builtIns = new List<ProcedureNode>();
                     builtInMethods = new List<MethodMirror>();
@@ -412,7 +408,7 @@ namespace ProtoCore
             {
                 if (!string.IsNullOrEmpty(className))
                 {
-                    ClassTable classTable = staticCore.ClassTable;
+                    ClassTable classTable = staticcompileState.ClassTable;
                     int ci = classTable.IndexOf(className);
 
                     if (ci != ProtoCore.DSASM.Constants.kInvalidIndex)
@@ -426,9 +422,9 @@ namespace ProtoCore
                 }
                 else // Check for global functions
                 {
-                    Validity.Assert(staticCore.CodeBlockList.Count > 0);
+                    Validity.Assert(staticcompileState.CodeBlockList.Count > 0);
 
-                    List<ProcedureNode> procNodes = staticCore.CodeBlockList[0].procedureTable.procList;
+                    List<ProcedureNode> procNodes = staticcompileState.CodeBlockList[0].procedureTable.procList;
 
                     MethodMirror mm = FindMethod(methodName, arguments, procNodes);
                     if (mm != null)
@@ -445,6 +441,7 @@ namespace ProtoCore
         /// </summary>
         public class ClassMirror : StaticMirror
         {
+            private ProtoLanguage.CompileStateTracker compileState = null;
             public string ClassName { get; private set; }
 
             private LibraryMirror libraryMirror = null;
@@ -454,7 +451,7 @@ namespace ProtoCore
             //{
             //}
 
-            public ClassMirror(ProtoCore.Type type, ProtoCore.Core core)
+            public ClassMirror(ProtoCore.Type type, ProtoLanguage.CompileStateTracker compileState)
             {
                 if (core != null)
                 {
@@ -464,14 +461,14 @@ namespace ProtoCore
                         ProtoCore.DSASM.ClassTable classTable = core.ClassTable;
                         classNode = classTable.ClassNodes[type.UID];
                     }
-                    libraryMirror = new LibraryMirror(classNode.ExternLib, core);
+                    libraryMirror = new LibraryMirror(classNode.ExternLib, compileState);
                 }
             }
 
-            public ClassMirror(string className, ProtoCore.Core core)
-                : base(core)
+            public ClassMirror(string className, ProtoLanguage.CompileStateTracker compileState)
+                : base(compileState)
             {
-                if (core == null)
+                if (compileState == null)
                     return;
 
                 ClassName = className;
@@ -479,7 +476,7 @@ namespace ProtoCore
                 if (classNode == null)
                 {
 
-                    ProtoCore.DSASM.ClassTable classTable = core.ClassTable;
+                    ProtoCore.DSASM.ClassTable classTable = compileState.ClassTable;
                     int ci = classTable.IndexOf(ClassName);
 
                     if (ci != ProtoCore.DSASM.Constants.kInvalidIndex)
@@ -487,16 +484,14 @@ namespace ProtoCore
                         classNode = classTable.ClassNodes[ci];                        
                     }
                 }
-                libraryMirror = new LibraryMirror(classNode.ExternLib, core);
+                libraryMirror = new LibraryMirror(classNode.ExternLib, compileState);
             }
 
-            //public ClassMirror(string className)
-            //{
-            //    ClassName = className;
-            //}
 
-            internal ClassMirror(ProtoCore.Core core, ProtoCore.DSASM.ClassNode classNode, LibraryMirror libraryMirror) : base(core)
+            internal ClassMirror(ProtoLanguage.CompileStateTracker compileState, ProtoCore.DSASM.ClassNode classNode, LibraryMirror libraryMirror)
+                //: base(compileState)
             {
+                this.compileState = compileState;
                 ClassName = classNode.name;
                 this.libraryMirror = libraryMirror;
                 this.classNode = classNode;
@@ -518,13 +513,13 @@ namespace ProtoCore
             public ClassMirror GetSuperClass()
             {
                 Validity.Assert(!string.IsNullOrEmpty(ClassName));
-                Validity.Assert(staticCore != null);
+                Validity.Assert(staticcompileState != null);
 
                 int ci;
                 if (classNode == null)
                 {
                     
-                    ProtoCore.DSASM.ClassTable classTable = staticCore.ClassTable;
+                    ProtoCore.DSASM.ClassTable classTable = staticcompileState.ClassTable;
                     ci = classTable.IndexOf(ClassName);
 
                     if (ci != ProtoCore.DSASM.Constants.kInvalidIndex)
@@ -536,7 +531,7 @@ namespace ProtoCore
                 ci = classNode.baseList[0];
                 Validity.Assert(ci != ProtoCore.DSASM.Constants.kInvalidIndex);
 
-                return new ClassMirror(staticCore, staticCore.ClassTable.ClassNodes[ci], this.libraryMirror);                
+                return new ClassMirror(staticcompileState, staticcompileState.ClassTable.ClassNodes[ci], this.libraryMirror);                
 
             }
 
@@ -549,13 +544,13 @@ namespace ProtoCore
                 List<ClassMirror> baseClasses = new List<ClassMirror>();
                 
                 Validity.Assert(!string.IsNullOrEmpty(ClassName));
-                Validity.Assert(staticCore != null);
+                Validity.Assert(staticcompileState != null);
 
                 int ci;
                 if (classNode == null)
                 {
                     
-                    ProtoCore.DSASM.ClassTable classTable = staticCore.ClassTable;
+                    ProtoCore.DSASM.ClassTable classTable = staticcompileState.ClassTable;
                     ci = classTable.IndexOf(ClassName);
 
                     if (ci != ProtoCore.DSASM.Constants.kInvalidIndex)
@@ -571,9 +566,9 @@ namespace ProtoCore
                     ci = cNode.baseList[0];
                     Validity.Assert(ci != ProtoCore.DSASM.Constants.kInvalidIndex);
 
-                    baseClasses.Add(new ClassMirror(staticCore, staticCore.ClassTable.ClassNodes[ci], this.libraryMirror));
+                    baseClasses.Add(new ClassMirror(staticcompileState, staticcompileState.ClassTable.ClassNodes[ci], this.libraryMirror));
 
-                    cNode = staticCore.ClassTable.ClassNodes[ci];
+                    cNode = staticcompileState.ClassTable.ClassNodes[ci];
                 }
                 return baseClasses;
             }
@@ -591,9 +586,9 @@ namespace ProtoCore
 
                 if (classNode == null)
                 {
-                    Validity.Assert(staticCore != null);
+                    Validity.Assert(staticcompileState != null);
                 
-                    ProtoCore.DSASM.ClassTable classTable = staticCore.ClassTable;
+                    ProtoCore.DSASM.ClassTable classTable = staticcompileState.ClassTable;
                     int ci = classTable.IndexOf(ClassName);
 
                     
@@ -651,8 +646,8 @@ namespace ProtoCore
                 
                 if(classNode == null)
                 {
-                    Validity.Assert(staticCore != null);
-                    ProtoCore.DSASM.ClassTable classTable = staticCore.ClassTable;
+                    Validity.Assert(staticcompileState != null);
+                    ProtoCore.DSASM.ClassTable classTable = staticcompileState.ClassTable;
                     int ci = classTable.IndexOf(ClassName);
 
                     if (ci != ProtoCore.DSASM.Constants.kInvalidIndex)
@@ -683,9 +678,9 @@ namespace ProtoCore
                 
                 if(classNode == null)
                 {
-                    Validity.Assert(staticCore != null);
+                    Validity.Assert(staticcompileState != null);
 
-                    ProtoCore.DSASM.ClassTable classTable = staticCore.ClassTable;
+                    ProtoCore.DSASM.ClassTable classTable = staticcompileState.ClassTable;
                     int ci = classTable.IndexOf(ClassName);
 
                     if (ci != ProtoCore.DSASM.Constants.kInvalidIndex)
@@ -716,9 +711,9 @@ namespace ProtoCore
 
                 if(classNode == null)
                 {
-                    Validity.Assert(staticCore != null);
+                    Validity.Assert(staticcompileState != null);
 
-                    ProtoCore.DSASM.ClassTable classTable = staticCore.ClassTable;
+                    ProtoCore.DSASM.ClassTable classTable = staticcompileState.ClassTable;
                     int ci = classTable.IndexOf(ClassName);
                     
                     if (ci != ProtoCore.DSASM.Constants.kInvalidIndex)
@@ -747,9 +742,9 @@ namespace ProtoCore
             {
                 if (classNode == null)
                 {
-                    Validity.Assert(staticCore != null);
+                    Validity.Assert(staticcompileState != null);
 
-                    ProtoCore.DSASM.ClassTable classTable = staticCore.ClassTable;
+                    ProtoCore.DSASM.ClassTable classTable = staticcompileState.ClassTable;
                     int ci = classTable.IndexOf(ClassName);
 
                     if (ci != ProtoCore.DSASM.Constants.kInvalidIndex)
@@ -873,10 +868,6 @@ namespace ProtoCore
                 } 
             }
 
-            //private PropertyMirror(string name)
-            //{
-            //    PropertyName = name;
-            //}
 
             internal PropertyMirror(ProcedureNode procNode, bool isSetter = false)
             {
@@ -901,28 +892,21 @@ namespace ProtoCore
             private List<ClassMirror> classMirrors = null;
             private List<MethodMirror> globalMethods = null;
             
-            //public LibraryMirror()
-            //{ }
 
-            public LibraryMirror(string libName, ProtoCore.Core core)
-                : base(core)
+            public LibraryMirror(string libName, ProtoLanguage.CompileStateTracker compileState)
+                : base(compileState)
             {
                 LibraryName = libName;
             }
 
-            //public LibraryMirror(string libName)
-            //{
-            //    LibraryName = libName;
-            //}
-
-            public LibraryMirror(ProtoCore.Core core, string libName, IList<ProtoCore.DSASM.ClassNode> classNodes) : base(core)
+            public LibraryMirror(ProtoLanguage.CompileStateTracker compileState, string libName, IList<ProtoCore.DSASM.ClassNode> classNodes) : base(compileState)
             {
                 LibraryName = libName;
 
                 classMirrors = new List<ClassMirror>();
                 foreach (ProtoCore.DSASM.ClassNode cnode in classNodes)
                 {
-                    ClassMirror classMirror = new ClassMirror(core, cnode, this);
+                    ClassMirror classMirror = new ClassMirror(compileState, cnode, this);
                     classMirrors.Add(classMirror);
                 }
             }
@@ -946,11 +930,11 @@ namespace ProtoCore
                 {
                     List<MethodMirror> methods = new List<MethodMirror>();
 
-                    Validity.Assert(staticCore != null);
+                    Validity.Assert(staticcompileState != null);
 
-                    Validity.Assert(staticCore.CodeBlockList.Count > 0);
+                    Validity.Assert(staticcompileState.CodeBlockList.Count > 0);
 
-                    List<ProcedureNode> procNodes = staticCore.CodeBlockList[0].procedureTable.procList;
+                    List<ProcedureNode> procNodes = staticcompileState.CodeBlockList[0].procedureTable.procList;
 
                     int numNewMethods = procNodes.Count - numBuiltInMethods;
                     Validity.Assert(numNewMethods >= 0);
@@ -1020,10 +1004,10 @@ namespace ProtoCore
                 else // find method in Class
                 {
 
-                    Validity.Assert(staticCore != null);
+                    Validity.Assert(staticcompileState != null);
 
                     ClassNode classNode = null;
-                    ProtoCore.DSASM.ClassTable classTable = staticCore.ClassTable;
+                    ProtoCore.DSASM.ClassTable classTable = staticcompileState.ClassTable;
                     int ci = classTable.IndexOf(className);
 
                     if (ci != ProtoCore.DSASM.Constants.kInvalidIndex)

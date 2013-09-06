@@ -15,7 +15,6 @@ using Autodesk.DesignScript.Interfaces;
 
 namespace ProtoLanguage
 {
-
     public enum ExecutionMode
     {
         Parallel,
@@ -26,8 +25,8 @@ namespace ProtoLanguage
     {
         public CompileOptions()
         {
-            DumpByteCode = false;
-            Verbose = false;
+            DumpByteCode = true;
+            Verbose = true;
 
             FullSSA = false;
             DumpIL = false;
@@ -818,6 +817,20 @@ namespace ProtoLanguage
         public int FunctionCallDepth { get; set; }
         public System.IO.TextWriter ExecutionLog { get; set; }
 
+        protected void OnDispose()
+        {
+            if (Dispose != null)
+            {
+                Dispose(this);
+            }
+        }
+
+        public void Cleanup()
+        {
+            OnDispose();
+            ProtoFFI.CLRModuleType.ClearTypes();
+        }
+
 
         public void InitializeContextGlobals(Dictionary<string, object> context)
         {
@@ -1073,63 +1086,63 @@ namespace ProtoLanguage
             return codeblock;
         }
 
-        public StackValue Bounce(int exeblock, int entry, ProtoCore.Runtime.Context context, ProtoCore.DSASM.StackFrame stackFrame, int locals = 0, ProtoCore.DebugServices.EventSink sink = null)
-        {
-            if (stackFrame != null)
-            {
-                ProtoCore.DSASM.StackValue svThisPtr = stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kThisPtr);
-                int ci = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kClass).opdata;
-                int fi = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunction).opdata;
-                int returnAddr = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kReturnAddress).opdata;
-                int blockDecl = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunctionBlock).opdata;
-                int blockCaller = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunctionCallerBlock).opdata;
-                ProtoCore.DSASM.StackFrameType callerFrameType = (ProtoCore.DSASM.StackFrameType)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kCallerStackFrameType).opdata;
-                ProtoCore.DSASM.StackFrameType frameType = (ProtoCore.DSASM.StackFrameType)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kStackFrameType).opdata;
-                Validity.Assert(frameType == StackFrameType.kTypeLanguage);
+        //public StackValue Bounce(int exeblock, int entry, ProtoCore.Runtime.Context context, ProtoCore.DSASM.StackFrame stackFrame, int locals = 0, ProtoCore.DebugServices.EventSink sink = null)
+        //{
+        //    if (stackFrame != null)
+        //    {
+        //        ProtoCore.DSASM.StackValue svThisPtr = stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kThisPtr);
+        //        int ci = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kClass).opdata;
+        //        int fi = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunction).opdata;
+        //        int returnAddr = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kReturnAddress).opdata;
+        //        int blockDecl = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunctionBlock).opdata;
+        //        int blockCaller = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunctionCallerBlock).opdata;
+        //        ProtoCore.DSASM.StackFrameType callerFrameType = (ProtoCore.DSASM.StackFrameType)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kCallerStackFrameType).opdata;
+        //        ProtoCore.DSASM.StackFrameType frameType = (ProtoCore.DSASM.StackFrameType)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kStackFrameType).opdata;
+        //        Validity.Assert(frameType == StackFrameType.kTypeLanguage);
 
-                int depth = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kStackFrameDepth).opdata;
-                int framePointer = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFramePointer).opdata;
-                List<StackValue> registers = stackFrame.GetRegisters();
+        //        int depth = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kStackFrameDepth).opdata;
+        //        int framePointer = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFramePointer).opdata;
+        //        List<StackValue> registers = stackFrame.GetRegisters();
 
-                Rmem.PushStackFrame(svThisPtr, ci, fi, returnAddr, blockDecl, blockCaller, callerFrameType, frameType, depth + 1, framePointer, registers, locals, 0);
-            }
+        //        Rmem.PushStackFrame(svThisPtr, ci, fi, returnAddr, blockDecl, blockCaller, callerFrameType, frameType, depth + 1, framePointer, registers, locals, 0);
+        //    }
 
-            ProtoCore.Language id = DSExecutable.instrStreamList[exeblock].language;
-            CurrentExecutive = Executives[id];
-            ProtoCore.DSASM.StackValue sv = Executives[id].Execute(exeblock, entry, context, sink);
-            return sv;
-        }
+        //    ProtoCore.Language id = DSExecutable.instrStreamList[exeblock].language;
+        //    CurrentExecutive = Executives[id];
+        //    ProtoCore.DSASM.StackValue sv = Executives[id].Execute(exeblock, entry, context, sink);
+        //    return sv;
+        //}
 
-        public StackValue Bounce(int exeblock, int entry, ProtoCore.Runtime.Context context, List<Instruction> breakpoints, ProtoCore.DSASM.StackFrame stackFrame, int locals = 0,
-            ProtoCore.DSASM.Executive exec = null, ProtoCore.DebugServices.EventSink sink = null, bool fepRun = false)
-        {
-            if (stackFrame != null)
-            {
-                ProtoCore.DSASM.StackValue svThisPtr = stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kThisPtr);
-                int ci = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kClass).opdata;
-                int fi = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunction).opdata;
-                int returnAddr = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kReturnAddress).opdata;
-                int blockDecl = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunctionBlock).opdata;
-                int blockCaller = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunctionCallerBlock).opdata;
-                ProtoCore.DSASM.StackFrameType callerFrameType = (ProtoCore.DSASM.StackFrameType)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kCallerStackFrameType).opdata;
-                ProtoCore.DSASM.StackFrameType frameType = (ProtoCore.DSASM.StackFrameType)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kStackFrameType).opdata;
-                Validity.Assert(frameType == StackFrameType.kTypeLanguage);
+        //public StackValue Bounce(int exeblock, int entry, ProtoCore.Runtime.Context context, List<Instruction> breakpoints, ProtoCore.DSASM.StackFrame stackFrame, int locals = 0,
+        //    ProtoCore.DSASM.Executive exec = null, ProtoCore.DebugServices.EventSink sink = null, bool fepRun = false)
+        //{
+        //    if (stackFrame != null)
+        //    {
+        //        ProtoCore.DSASM.StackValue svThisPtr = stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kThisPtr);
+        //        int ci = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kClass).opdata;
+        //        int fi = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunction).opdata;
+        //        int returnAddr = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kReturnAddress).opdata;
+        //        int blockDecl = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunctionBlock).opdata;
+        //        int blockCaller = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFunctionCallerBlock).opdata;
+        //        ProtoCore.DSASM.StackFrameType callerFrameType = (ProtoCore.DSASM.StackFrameType)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kCallerStackFrameType).opdata;
+        //        ProtoCore.DSASM.StackFrameType frameType = (ProtoCore.DSASM.StackFrameType)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kStackFrameType).opdata;
+        //        Validity.Assert(frameType == StackFrameType.kTypeLanguage);
 
-                int depth = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kStackFrameDepth).opdata;
-                int framePointer = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFramePointer).opdata;
-                List<StackValue> registers = stackFrame.GetRegisters();
+        //        int depth = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kStackFrameDepth).opdata;
+        //        int framePointer = (int)stackFrame.GetAt(ProtoCore.DSASM.StackFrame.AbsoluteIndex.kFramePointer).opdata;
+        //        List<StackValue> registers = stackFrame.GetRegisters();
 
-                DebugProps.SetUpBounce(exec, blockCaller, returnAddr);
+        //        DebugProps.SetUpBounce(exec, blockCaller, returnAddr);
 
-                Rmem.PushStackFrame(svThisPtr, ci, fi, returnAddr, blockDecl, blockCaller, callerFrameType, frameType, depth + 1, framePointer, registers, locals, 0);
-            }
+        //        Rmem.PushStackFrame(svThisPtr, ci, fi, returnAddr, blockDecl, blockCaller, callerFrameType, frameType, depth + 1, framePointer, registers, locals, 0);
+        //    }
 
-            ProtoCore.Language id = DSExecutable.instrStreamList[exeblock].language;
-            CurrentExecutive = Executives[id];
+        //    ProtoCore.Language id = DSExecutable.instrStreamList[exeblock].language;
+        //    CurrentExecutive = Executives[id];
 
-            ProtoCore.DSASM.StackValue sv = Executives[id].Execute(exeblock, entry, context, breakpoints, sink, fepRun);
-            return sv;
-        }
+        //    ProtoCore.DSASM.StackValue sv = Executives[id].Execute(exeblock, entry, context, breakpoints, sink, fepRun);
+        //    return sv;
+        //}
 
         private void BfsBuildSequenceTable(CodeBlock codeBlock, SymbolTable[] runtimeSymbols)
         {
@@ -1198,10 +1211,7 @@ namespace ProtoLanguage
             {
                 if (null != DSExecutable.instrStreamList[i])
                 {
-
-                    // Jun: Fixme before submission
-                    //ExprInterpreterExe.instrStreamList[i] = new InstructionStream(DSExecutable.instrStreamList[i].language, this);
-                    
+                    ExprInterpreterExe.instrStreamList[i] = new InstructionStream(DSExecutable.instrStreamList[i].language, this);
                     for (int j = 0; j < DSExecutable.instrStreamList[i].instrList.Count; ++j)
                     {
                         ExprInterpreterExe.instrStreamList[i].instrList.Add(DSExecutable.instrStreamList[i].instrList[j]);
@@ -1255,6 +1265,9 @@ namespace ProtoLanguage
             {
                 DSExecutable.isSingleAssocBlock = (ProtoCore.DSASM.OpCode.BOUNCE == CodeBlockList[0].instrStream.instrList[0].opCode) ? true : false;
             }
+
+            DSExecutable.CodeBlockList = new List<CodeBlock>(CodeBlockList);
+
             GenerateExprExe();
         }
 

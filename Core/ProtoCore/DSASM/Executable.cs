@@ -14,12 +14,12 @@ namespace ProtoCore.DSASM
         public ProtoCore.AssociativeGraph.DependencyGraph dependencyGraph { get; set; }
         public List<ProtoCore.AssociativeGraph.UpdateNodeRef> xUpdateList { get; set; }
 
-        public InstructionStream(ProtoCore.Language langId, ProtoCore.Core core)
+        public InstructionStream(ProtoCore.Language langId, ProtoLanguage.CompileStateTracker compileState)
         {
             language = langId;
             entrypoint = Constants.kInvalidIndex;
             instrList = new List<Instruction>();
-            dependencyGraph = new ProtoCore.AssociativeGraph.DependencyGraph(core);
+            dependencyGraph = new ProtoCore.AssociativeGraph.DependencyGraph(compileState);
             xUpdateList = new List<AssociativeGraph.UpdateNodeRef>();
         }
     }
@@ -32,6 +32,9 @@ namespace ProtoCore.DSASM
     public class Executable
     {
         public bool isSingleAssocBlock { get; set; }
+
+        public List<CodeBlock> CodeBlockList { get; set; }
+
         public ProtoCore.DSASM.ClassTable classTable { get; set; }
         public ProtoCore.DSASM.ProcedureTable[] procedureTable { get; set; }
         public ProtoCore.DSASM.SymbolTable[] runtimeSymbols { get; set; }
@@ -54,6 +57,7 @@ namespace ProtoCore.DSASM
             classTable = null;
             instrStreamList = null;
             iStreamCanvas = null;
+            CodeBlockList = new List<CodeBlock>();
         }
     }
 
@@ -85,7 +89,7 @@ namespace ProtoCore.DSASM
 
         public bool isBreakable { get; set; }
 
-        public CodeBlock(CodeBlockType type, ProtoCore.Language langId, int codeBlockId, SymbolTable symbols, ProcedureTable procTable, bool isBreakableBlock = false, ProtoCore.Core core = null)
+        public CodeBlock(CodeBlockType type, ProtoCore.Language langId, int codeBlockId, SymbolTable symbols, ProcedureTable procTable, bool isBreakableBlock = false, ProtoLanguage.CompileStateTracker compileState = null)
         {
             blockType = type;
 
@@ -94,7 +98,7 @@ namespace ProtoCore.DSASM
 
             language = langId;
             this.codeBlockId = codeBlockId;
-            instrStream = new InstructionStream(langId, core);
+            instrStream = new InstructionStream(langId, compileState);
 
             symbolTable = symbols;
             procedureTable = procTable;

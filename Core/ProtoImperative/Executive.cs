@@ -5,19 +5,24 @@ using System.Diagnostics;
 namespace ProtoImperative
 {
 	public class Executive : ProtoCore.Executive
-	{
-        public Executive(ProtoLanguage.CompileStateTracker compilerState)
-            : base(compilerState)
+    {
+        public Executive()
+            : base(null)
+        {
+        }
+
+        public Executive(ProtoCore.Core core)
+            : base(core)
 		{
 		}
 
-        public override bool Compile(out int blockId, ProtoCore.DSASM.CodeBlock parentBlock, ProtoCore.LanguageCodeBlock langBlock, ProtoCore.CompileTime.Context callContext, ProtoCore.DebugServices.EventSink sink, ProtoCore.AST.Node codeBlockNode, ProtoCore.AssociativeGraph.GraphNode graphNode = null)
+        public override bool Compile(ProtoLanguage.CompileStateTracker compileState, out int blockId, ProtoCore.DSASM.CodeBlock parentBlock, ProtoCore.LanguageCodeBlock langBlock, ProtoCore.CompileTime.Context callContext, ProtoCore.DebugServices.EventSink sink, ProtoCore.AST.Node codeBlockNode, ProtoCore.AssociativeGraph.GraphNode graphNode = null)
         {
             Debug.Assert(langBlock != null);
             blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
 
             bool buildSucceeded = false;
-            bool isLanguageSignValid = isLanguageSignValid = compileState.Langverify.Verify(langBlock);
+            bool isLanguageSignValid = isLanguageSignValid = core.Langverify.Verify(langBlock);
 
             if (isLanguageSignValid)
             {
@@ -53,7 +58,7 @@ namespace ProtoImperative
 
                 int errors = 0;
                 int warnings = 0;
-                buildSucceeded = compileState.BuildStatus.GetBuildResult(out errors, out warnings);
+                buildSucceeded = core.BuildStatus.GetBuildResult(out errors, out warnings);
             }
             return buildSucceeded;
         }

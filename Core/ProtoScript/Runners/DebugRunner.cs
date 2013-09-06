@@ -430,6 +430,9 @@ namespace ProtoScript.Runners
         {
             bool buildSucceeded = false;
             blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
+
+            ProtoLanguage.CompileStateTracker compileState = ProtoScript.CompilerUtils.BuildDefaultCompilerState();
+
             try
             {
                 //defining the global Assoc block that wraps the entire .ds source file
@@ -442,15 +445,26 @@ namespace ProtoScript.Runners
                 //passing the global Assoc wrapper block to the compiler
                 ProtoCore.CompileTime.Context context = new ProtoCore.CompileTime.Context();
                 ProtoCore.Language id = globalBlock.language;
-                core.Executives[id].Compile(out blockId, null, globalBlock, context, EventSink);
+
+
+
+                compileState.Executives[id].Compile(compileState, out blockId, null, globalBlock, context, EventSink);
 
                 core.BuildStatus.ReportBuildResult();
 
                 int errors = 0;
                 int warnings = 0;
                 buildSucceeded = core.BuildStatus.GetBuildResult(out errors, out warnings);
-                core.GenerateExecutable();
-                core.Rmem.PushGlobFrame(core.GlobOffset);
+
+
+                // This is the boundary between compilestate and runtime core
+                // Generate the executable
+                compileState.GenerateExecutable();
+
+                // Get the executable from the compileState
+                core.DSExecutable = compileState.DSExecutable;
+
+                core.Rmem.PushGlobFrame(compileState.GlobOffset);
 
             }
             catch (Exception ex)

@@ -124,8 +124,8 @@ namespace ProtoCore
     {
         public Options()
         {
-            DumpByteCode = false;
-            Verbose = false;
+            DumpByteCode = true;
+            Verbose = true;
 
             FullSSA = false;
             DumpIL = false;
@@ -1958,7 +1958,9 @@ namespace ProtoCore
             }
         }
 
-
+        //
+        // Comment Jun: The compile state will now handle executable generation
+        /*
         public void GenerateExprExe()
         {
             // TODO Jun: Determine if we really need another executable for the expression interpreter
@@ -1987,6 +1989,7 @@ namespace ProtoCore
                 }
             }
         }
+        
 
 
         public void GenerateExprExeInstructions(int blockScope)
@@ -2035,7 +2038,7 @@ namespace ProtoCore
             }
             GenerateExprExe();
         }
-
+        */
 
 
         public string GenerateTempVar()

@@ -4385,7 +4385,7 @@ namespace ProtoAssociative
                     propagateGraphNode = graphNode;
                 }
 
-                compileStateTracker.Executives[langblock.codeblock.language].Compile(out blockId, codeBlock, langblock.codeblock, context, codeBlock.EventSink, langblock.CodeBlockNode, propagateGraphNode);
+                compileStateTracker.Executives[langblock.codeblock.language].Compile(compileStateTracker, out blockId, codeBlock, langblock.codeblock, context, codeBlock.EventSink, langblock.CodeBlockNode, propagateGraphNode);
                 graphNode.isLanguageBlock = true;
                 graphNode.languageBlockId = blockId;
 
@@ -4442,7 +4442,7 @@ namespace ProtoAssociative
                         compileStateTracker.ProcNode = codeBlock.procedureTable.procList[globalProcIndex];
                 }
 
-                compileStateTracker.Executives[langblock.codeblock.language].Compile(out blockId, codeBlock, langblock.codeblock, context, codeBlock.EventSink, langblock.CodeBlockNode, graphNode);
+                compileStateTracker.Executives[langblock.codeblock.language].Compile(compileStateTracker, out blockId, codeBlock, langblock.codeblock, context, codeBlock.EventSink, langblock.CodeBlockNode, graphNode);
                 
             }
         }

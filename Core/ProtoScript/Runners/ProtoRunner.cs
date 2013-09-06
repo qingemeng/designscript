@@ -148,8 +148,9 @@ namespace ProtoScript.Runners
                 }
                 ProtoCore.Lang.Obj objExecVal = mirror.GetWatchValue();
 
-                ProtoCore.Core staticCore = GraphToDSCompiler.GraphUtilities.GetCore();
-                ProtoCore.Mirror.RuntimeMirror runtimeMirror = new ProtoCore.Mirror.RuntimeMirror(new ProtoCore.Mirror.MirrorData(core, objExecVal.DsasmValue), core, staticCore);
+                ProtoLanguage.CompileStateTracker compileState = GraphToDSCompiler.GraphUtilities.GetCompilationState();
+
+                ProtoCore.Mirror.RuntimeMirror runtimeMirror = new ProtoCore.Mirror.RuntimeMirror(new ProtoCore.Mirror.MirrorData(core, objExecVal.DsasmValue), core, compileState);
                 Validity.Assert(runtimeMirror != null);
 
                 return runtimeMirror;
