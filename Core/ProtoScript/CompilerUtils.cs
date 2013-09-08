@@ -3,12 +3,13 @@
 using System;
 using ProtoCore;
 using ProtoCore.Utils;
+using System.Collections.Generic;
 
 namespace ProtoScript
 {
     public static class CompilerUtils
     {
-        public static ProtoLanguage.CompileStateTracker BuildDefaultCompilerState()
+        public static ProtoLanguage.CompileStateTracker BuildDefaultCompilerState(Dictionary<string, Object> context = null)
         {
             ProtoLanguage.CompileOptions options = new ProtoLanguage.CompileOptions();
 
@@ -16,6 +17,11 @@ namespace ProtoScript
 
             compileState.Executives.Add(ProtoCore.Language.kAssociative, new ProtoAssociative.Executive());
             compileState.Executives.Add(ProtoCore.Language.kImperative, new ProtoImperative.Executive());
+
+            if (null != context)
+            {
+                compileState.AddContextData(context);
+            }
 
             return compileState;
         }

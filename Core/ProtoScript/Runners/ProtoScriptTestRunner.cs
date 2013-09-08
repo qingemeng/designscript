@@ -39,7 +39,7 @@ namespace ProtoScript.Runners
 
                 int errors = 0;
                 int warnings = 0;
-                compileState.compileSucceeded = core.BuildStatus.GetBuildResult(out errors, out warnings);
+                compileState.compileSucceeded = compileState.BuildStatus.GetBuildResult(out errors, out warnings);
             }
             catch (Exception ex)
             {
@@ -78,7 +78,7 @@ namespace ProtoScript.Runners
 
                 int errors = 0;
                 int warnings = 0;
-                compileState.compileSucceeded = buildSucceeded = core.BuildStatus.GetBuildResult(out errors, out warnings);
+                compileState.compileSucceeded = buildSucceeded = compileState.BuildStatus.GetBuildResult(out errors, out warnings);
             }
             catch (Exception ex)
             {
@@ -88,6 +88,43 @@ namespace ProtoScript.Runners
             return compileState;
         }
 
+        public ProtoLanguage.CompileStateTracker Compile(string code, ProtoCore.Core core, Dictionary<string, Object> contextData, out int blockId)
+        {
+            ProtoLanguage.CompileStateTracker compileState = ProtoScript.CompilerUtils.BuildDefaultCompilerState(contextData);
+
+            bool buildSucceeded = false;
+
+            core.ExecMode = ProtoCore.DSASM.InterpreterMode.kNormal;
+
+            blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
+            try
+            {
+                //defining the global Assoc block that wraps the entire .ds source file
+                ProtoCore.LanguageCodeBlock globalBlock = new ProtoCore.LanguageCodeBlock();
+                globalBlock.language = ProtoCore.Language.kAssociative;
+                globalBlock.body = code;
+                //the wrapper block can be given a unique id to identify it as the global scope
+                globalBlock.id = ProtoCore.LanguageCodeBlock.OUTERMOST_BLOCK_ID;
+
+
+                //passing the global Assoc wrapper block to the compiler
+                ProtoCore.CompileTime.Context context = new ProtoCore.CompileTime.Context();
+                ProtoCore.Language id = globalBlock.language;
+                compileState.Executives[id].Compile(compileState, out blockId, null, globalBlock, context, EventSink);
+
+                compileState.BuildStatus.ReportBuildResult();
+
+                int errors = 0;
+                int warnings = 0;
+                compileState.compileSucceeded = buildSucceeded = compileState.BuildStatus.GetBuildResult(out errors, out warnings);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+
+            return compileState;
+        }
 
         public ProtoLanguage.CompileStateTracker Compile(string code, out int blockId)
         {
@@ -200,10 +237,14 @@ namespace ProtoScript.Runners
         public ExecutionMirror Execute(string code, ProtoCore.Core core, Dictionary<string, Object> values, bool isTest = true)
         {
             //Inject the context data values from external source.
-            core.AddContextData(values);
+            //core.AddContextData(values);
+
             int blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
-            ProtoLanguage.CompileStateTracker compileState = Compile(code, core, out blockId);
+            ProtoLanguage.CompileStateTracker compileState = Compile(code, core, values, out blockId);
             Validity.Assert(null != compileState);
+
+            core.ContextDataManager = compileState.ContextDataManager;
+
             if (compileState.compileSucceeded)
             {
                 // This is the boundary between compilestate and runtime core

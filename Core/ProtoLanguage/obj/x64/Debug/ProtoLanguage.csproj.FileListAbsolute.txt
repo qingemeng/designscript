@@ -1,0 +1,9 @@
+C:\jun\AutodeskResearch\git\designscript\Core\ProtoLanguage\bin\x64\Debug\ProtoLanguage.dll
+C:\jun\AutodeskResearch\git\designscript\Core\ProtoLanguage\bin\x64\Debug\ProtoLanguage.pdb
+C:\jun\AutodeskResearch\git\designscript\Core\ProtoLanguage\bin\x64\Debug\ProtoCore.dll
+C:\jun\AutodeskResearch\git\designscript\Core\ProtoLanguage\bin\x64\Debug\ProtoInterface.dll
+C:\jun\AutodeskResearch\git\designscript\Core\ProtoLanguage\bin\x64\Debug\ProtoCore.pdb
+C:\jun\AutodeskResearch\git\designscript\Core\ProtoLanguage\bin\x64\Debug\ProtoInterface.pdb
+C:\jun\AutodeskResearch\git\designscript\Core\ProtoLanguage\obj\x64\Debug\ResolveAssemblyReference.cache
+C:\jun\AutodeskResearch\git\designscript\Core\ProtoLanguage\obj\x64\Debug\ProtoLanguage.dll
+C:\jun\AutodeskResearch\git\designscript\Core\ProtoLanguage\obj\x64\Debug\ProtoLanguage.pdb
