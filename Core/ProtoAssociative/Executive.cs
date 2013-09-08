@@ -10,7 +10,6 @@ namespace ProtoAssociative
 	{
 
         public Executive()
-            : base(null)
 		{
 		}
 

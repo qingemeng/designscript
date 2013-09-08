@@ -7,7 +7,6 @@ namespace ProtoImperative
 	public class Executive : ProtoCore.Executive
     {
         public Executive()
-            : base(null)
         {
         }
 

@@ -101,8 +101,8 @@ namespace ProtoCore
 
         public CodeGen(ProtoLanguage.CompileStateTracker compileTracker, ProtoCore.DSASM.CodeBlock parentBlock = null)
         {
-            Debug.Assert(compileStateTracker != null);
-            compileStateTracker = compileTracker;
+            Debug.Assert(compileTracker != null);
+            this.compileStateTracker = compileTracker;
             buildStatus = compileStateTracker.BuildStatus;
             isEntrySet = false;
 
