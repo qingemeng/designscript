@@ -33,16 +33,30 @@ namespace ProtoCore.DSASM
     {
         public bool isSingleAssocBlock { get; set; }
 
-        public List<CodeBlock> CodeBlockList { get; set; }
 
         public ProtoCore.DSASM.ClassTable classTable { get; set; }
         public ProtoCore.DSASM.ProcedureTable[] procedureTable { get; set; }
         public ProtoCore.DSASM.SymbolTable[] runtimeSymbols { get; set; }
 
+        
         public InstructionStream[] instrStreamList { get; set; } 
         public InstructionStream iStreamCanvas { get; set; }
 
         public DebugServices.EventSink EventSink = new DebugServices.ConsoleEventSink();
+
+        //
+        // Comment Jun: Refactor core
+        //  These following properties are from core. 
+        //  They were previously accessed directly from core by the runtime.
+        //  They will now be part of the executable,
+        //  and all runtime shall only read from executable.
+        //
+        public List<CodeBlock> CodeBlockList { get; set; }
+        public ProtoCore.Lang.FunctionTable FunctionTable { get; set; }
+        public List<CodeBlock> CompleteCodeBlockList { get; set; }
+        public DynamicVariableTable DynamicVariableTable { get; set; }
+        public DynamicFunctionTable DynamicFunctionTable { get; set; }
+
 
         public Executable()
         {

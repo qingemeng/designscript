@@ -546,8 +546,8 @@ namespace ProtoCore.Utils
 
         public static string GetMangledFunctionName(int classIndex, string functionName, Core core)
         {
-            Validity.Assert(classIndex < core.ClassTable.ClassNodes.Count);
-            ClassNode cnode = core.ClassTable.ClassNodes[classIndex];
+            Validity.Assert(classIndex < core.DSExecutable.classTable.ClassNodes.Count);
+            ClassNode cnode = core.DSExecutable.classTable.ClassNodes[classIndex];
             string name = ProtoCore.DSASM.Constants.kGlobalInstanceNamePrefix + cnode.name + ProtoCore.DSASM.Constants.kGlobalInstanceFunctionPrefix + functionName;
             return name;
         }
@@ -725,8 +725,8 @@ namespace ProtoCore.Utils
                 return string.Empty;
             }
 
-            Validity.Assert(core.ClassTable.ClassNodes.Count > procNode.classScope);
-            return core.ClassTable.ClassNodes[procNode.classScope].name;
+            Validity.Assert(core.DSExecutable.classTable.ClassNodes.Count > procNode.classScope);
+            return core.DSExecutable.classTable.ClassNodes[procNode.classScope].name;
         }
 
 
@@ -734,7 +734,7 @@ namespace ProtoCore.Utils
         public static ProcedureNode GetClassAndProcFromGlobalInstance(ProcedureNode procNode, Core core, out int classIndex, List<Type> argTypeList)
         {
             string className = ProtoCore.Utils.CoreUtils.GetClassDeclarationName(procNode, core);
-            classIndex = core.ClassTable.IndexOf(className);
+            classIndex = core.DSExecutable.classTable.IndexOf(className);
 
 
             int removelength = 0;
@@ -756,10 +756,10 @@ namespace ProtoCore.Utils
             }
 
             string functionName = procNode.name.Remove(0, removelength);
-            //ProtoCore.DSASM.ProcedureNode tmpProcNode = core.ClassTable.list[classIndex].GetFirstMemberFunction(functionName, procNode.argTypeList.Count - 1);
+            //ProtoCore.DSASM.ProcedureNode tmpProcNode = core.DSExecutable.classTable.list[classIndex].GetFirstMemberFunction(functionName, procNode.argTypeList.Count - 1);
 
-            int functionIndex = core.ClassTable.ClassNodes[classIndex].vtable.IndexOfExact(functionName, argTypeList);
-            ProtoCore.DSASM.ProcedureNode tmpProcNode = core.ClassTable.ClassNodes[classIndex].vtable.procList[functionIndex];
+            int functionIndex = core.DSExecutable.classTable.ClassNodes[classIndex].vtable.IndexOfExact(functionName, argTypeList);
+            ProtoCore.DSASM.ProcedureNode tmpProcNode = core.DSExecutable.classTable.ClassNodes[classIndex].vtable.procList[functionIndex];
 
             return tmpProcNode;
         }

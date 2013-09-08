@@ -124,8 +124,8 @@ namespace ProtoCore
     {
         public Options()
         {
-            DumpByteCode = true;
-            Verbose = true;
+            DumpByteCode = false;
+            Verbose = false;
 
             FullSSA = false;
             DumpIL = false;

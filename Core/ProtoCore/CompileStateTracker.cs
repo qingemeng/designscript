@@ -25,8 +25,8 @@ namespace ProtoLanguage
     {
         public CompileOptions()
         {
-            DumpByteCode = true;
-            Verbose = true;
+            DumpByteCode = false;
+            Verbose = false;
 
             FullSSA = false;
             DumpIL = false;
@@ -1266,7 +1266,12 @@ namespace ProtoLanguage
                 DSExecutable.isSingleAssocBlock = (ProtoCore.DSASM.OpCode.BOUNCE == CodeBlockList[0].instrStream.instrList[0].opCode) ? true : false;
             }
 
+            // Properties directly accessed by the runtime from core, should now be accessed from the executable
             DSExecutable.CodeBlockList = new List<CodeBlock>(CodeBlockList);
+            DSExecutable.FunctionTable = FunctionTable;
+            DSExecutable.CompleteCodeBlockList = CompleteCodeBlockList;
+            DSExecutable.DynamicVariableTable = DynamicVariableTable;
+            DSExecutable.DynamicFunctionTable = DynamicFunctionTable;
 
             GenerateExprExe();
         }

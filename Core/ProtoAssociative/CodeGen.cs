@@ -1545,7 +1545,6 @@ namespace ProtoAssociative
                 && procName != ProtoCore.DSASM.Constants.kFunctionPointerCall)
             {
                 bool isStaticOrConstructor = refClassIndex != ProtoCore.DSASM.Constants.kInvalidIndex;
-                //procCallNode = core.classTable.list[inferedType.UID].GetMemberFunction(procName, arglist, globalClassIndex, out isAccessible, out realType, isStaticOrConstructor);
                 procCallNode = compileStateTracker.ClassTable.ClassNodes[inferedType.UID].GetFirstMemberFunction(procName);
             }
 
@@ -6608,39 +6607,6 @@ namespace ProtoAssociative
                 }
                 newIdentList = fCall;
             }
-                /*
-            else if (node is ProtoCore.AST.ImperativeAST.FunctionDotCallNode)
-            {
-                ProtoCore.AST.ImperativeAST.FunctionDotCallNode dotCall = node as ProtoCore.AST.ImperativeAST.FunctionDotCallNode;
-                string name = dotCall.DotCall.FormalArguments[0].Name;
-
-                // TODO Jun: If its a constructor, leave it as it is. 
-                // After the first version of global instance functioni s implemented, 2nd phase would be to remove dotarg methods completely
-                bool isConstructorCall = false;
-                if (null != name)
-                {
-                    isConstructorCall = ProtoCore.DSASM.Constants.kInvalidIndex != core.ClassTable.IndexOf(name);
-                }
-
-                ProtoCore.AST.ImperativeAST.FunctionCallNode fCall = (node as ProtoCore.AST.ImperativeAST.FunctionDotCallNode).FunctionCall;
-
-
-                if (isConstructorCall)
-                {
-                    newIdentList = node;
-                }
-                else
-                {
-                    for (int n = 0; n < fCall.FormalArguments.Count; ++n)
-                    {
-                        ProtoCore.AST.ImperativeAST.ImperativeNode argNode = fCall.FormalArguments[n];
-                        TraverseAndAppendThisPtrArg(argNode, ref argNode);
-                        fCall.FormalArguments[n] = argNode;
-                    }
-                    newIdentList = fCall;
-                }
-            }
-            */
             else if (node is ProtoCore.AST.ImperativeAST.IdentifierNode)
             {
                 string identName = (node as ProtoCore.AST.ImperativeAST.IdentifierNode).Name;

@@ -120,34 +120,7 @@ namespace ProtoCore
                 return deprecateThisMirror.GetStringValue(mirrorData.GetStackValue(), TargetExecutive.rmem.Heap, blockDeclaration); 
             }
 
-            // Concatenates the list of strings into a single string of comma separated types
-            /*private string GetTypesHelper(List<string> types)
-            {
-                string type = "";
-                foreach(string s in types)
-                {
-                    if(string.IsNullOrEmpty(type))
-                        type = s;
-                    else
-                        type += "," + s;
-                }
-                return type;
-            }*/
-
-            /*private string GetAssembly(StackValue sv)
-            {
-                if (sv.optype == AddressType.Pointer)
-                {
-                    ClassNode classNode = core.ClassTable.ClassNodes[(int)sv.metaData.type];
-                    assemblyName = classNode.ExternLib;
-                    
-                }
-                else if (sv.optype == AddressType.ArrayPointer)
-                {
-                    assemblyName = GetTypesHelper();                    
-                }
-                return assemblyName;
-            }*/
+           
 
             // Returns a list of unique types in the input array
             //private List<string> GetArrayTypes(StackValue svData)
@@ -225,21 +198,8 @@ namespace ProtoCore
                 Dictionary<string, List<string>> asmType = new Dictionary<string, List<string>>();
                 if (sv.optype == AddressType.Pointer)
                 {
-                    ClassNode classNode = core.ClassTable.ClassNodes[(int)sv.metaData.type];
-                    //assemblyName = classNode.ExternLib;                    
-                    //return classNode.name;
-                    /*if (!asmType.ContainsKey(classNode.ExternLib))
-                    {
-                        List<string> types = new List<string>();
-                        types.Add(classNode.name);
-                        asmType.Add(classNode.ExternLib, types);
-                    }
-                    else
-                    {
-                        List<string> types = asmType[classNode.ExternLib];
-                        if (!types.Contains(classNode.name))
-                            types.Add(classNode.name);
-                    }*/
+                    ClassNode classNode = core.DSExecutable.classTable.ClassNodes[(int)sv.metaData.type];
+                   
                     List<string> types = new List<string>();
                     types.Add(classNode.name);
                     asmType.Add(classNode.ExternLib, types);
@@ -458,7 +418,7 @@ namespace ProtoCore
                     ClassName = type.Name;
                     if (classNode == null)
                     {
-                        ProtoCore.DSASM.ClassTable classTable = core.ClassTable;
+                        ProtoCore.DSASM.ClassTable classTable = core.DSExecutable.classTable;
                         classNode = classTable.ClassNodes[type.UID];
                     }
                     libraryMirror = new LibraryMirror(classNode.ExternLib, compileState);
