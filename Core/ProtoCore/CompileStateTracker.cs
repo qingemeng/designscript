@@ -283,9 +283,23 @@ namespace ProtoLanguage
         public Dictionary<string, object> Configurations { get; set; }
 
         //Manages injected context data.
-        internal ContextDataManager ContextDataManager { get; set; }
+        public ContextDataManager ContextDataManager { get; set; }
 
         public ParseMode ParsingMode { get; set; }
+
+        public FFIPropertyChangedMonitor FFIPropertyChangedMonitor { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data"></param>
+        public void AddContextData(Dictionary<string, Object> data)
+        {
+            if (data == null)
+                return;
+
+            ContextDataManager.GetInstance(this).AddData(data);
+        }
 
 
         // Cached replication guides for the current call. 
