@@ -202,12 +202,11 @@ namespace ProtoScript.Runners
             return compileState;
         }
 
-        public void Execute(ProtoCore.Core core, ProtoCore.Runtime.Context context)
+        public void Execute(ProtoCore.Core core, ProtoCore.Runtime.Context context, ProtoLanguage.CompileStateTracker compileState)
         {
             try
             {
-                core.NotifyExecutionEvent(ProtoCore.ExecutionStateEventArgs.State.kExecutionBegin);
-                //foreach (ProtoCore.DSASM.CodeBlock codeblock in core.CodeBlockList)
+                compileState.NotifyExecutionEvent(ProtoCore.ExecutionStateEventArgs.State.kExecutionBegin);
                 foreach (ProtoCore.DSASM.CodeBlock codeblock in core.DSExecutable.CodeBlockList)
                 {
                     int locals = 0;
@@ -257,7 +256,7 @@ namespace ProtoScript.Runners
                 core.Rmem.PushGlobFrame(compileState.GlobOffset);
                 core.RunningBlock = blockId;
 
-                Execute(core, new ProtoCore.Runtime.Context());
+                Execute(core, new ProtoCore.Runtime.Context(), compileState);
 
                 if (!isTest) { core.Heap.Free(); }
             }
@@ -291,7 +290,7 @@ namespace ProtoScript.Runners
                 core.InitializeContextGlobals(staticContext.GlobalVarList);
 
                 Validity.Assert(null != runtimeContext);
-                Execute(core, runtimeContext);
+                Execute(core, runtimeContext, compileState);
                 if (!isTest)
                 {
                     core.Heap.Free();
@@ -327,7 +326,7 @@ namespace ProtoScript.Runners
                 core.Rmem.PushGlobFrame(compileState.GlobOffset);
                 core.RunningBlock = blockId;
 
-                Execute(core, new ProtoCore.Runtime.Context());
+                Execute(core, new ProtoCore.Runtime.Context(), compileState);
                 if (!isTest) 
                 { 
                     core.Heap.Free(); 
@@ -362,7 +361,7 @@ namespace ProtoScript.Runners
 
                 core.RunningBlock = blockId;
 
-                Execute(core, new ProtoCore.Runtime.Context());
+                Execute(core, new ProtoCore.Runtime.Context(), compileState);
                 if (!isTest)
                 {
                     core.Heap.Free();

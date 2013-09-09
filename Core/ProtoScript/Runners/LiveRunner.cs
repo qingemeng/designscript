@@ -1207,7 +1207,7 @@ namespace ProtoScript.Runners
             ProtoCore.Runtime.Context runtimeContext = new ProtoCore.Runtime.Context();
             runtimeContext.execFlagList = graphCompiler.ExecutionFlagList;
 
-            runner.Execute(runnerCore, runtimeContext);
+            runner.Execute(runnerCore, runtimeContext, null);
 
             return new ProtoRunner.ProtoVMState(runnerCore);
         }

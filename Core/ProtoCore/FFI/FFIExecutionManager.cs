@@ -128,7 +128,6 @@ namespace ProtoFFI
 
         private void OnExecutionEvent(object sender, ExecutionStateEventArgs e)
         {
-        //    Core core = sender as Core;
             ProtoLanguage.CompileStateTracker compileState = sender as ProtoLanguage.CompileStateTracker;
             FFIExecutionSession session = GetSession(compileState, false);
             //If there wasn't any session created, there was no extension app 
