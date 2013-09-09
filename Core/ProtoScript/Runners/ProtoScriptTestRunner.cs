@@ -165,7 +165,7 @@ namespace ProtoScript.Runners
         {
             ProtoLanguage.CompileStateTracker compileState = ProtoScript.CompilerUtils.BuildDefaultCompilerState();
 
-            core.ExecMode = ProtoCore.DSASM.InterpreterMode.kNormal;
+            compileState.ExecMode = ProtoCore.DSASM.InterpreterMode.kNormal;
 
             blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
             try
@@ -188,11 +188,11 @@ namespace ProtoScript.Runners
 
                 compileState.Executives[id].Compile(compileState, out blockId, null, globalBlock, context, EventSink, codeblock);
 
-                core.BuildStatus.ReportBuildResult();
+                compileState.BuildStatus.ReportBuildResult();
 
                 int errors = 0;
                 int warnings = 0;
-                compileState.compileSucceeded = core.BuildStatus.GetBuildResult(out errors, out warnings);
+                compileState.compileSucceeded = compileState.BuildStatus.GetBuildResult(out errors, out warnings);
             }
             catch (Exception ex)
             {

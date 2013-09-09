@@ -14,10 +14,13 @@ namespace ProtoScript.Runners
         private ProtoLanguage.CompileStateTracker compileState; 
         private readonly ProtoCore.DebugServices.EventSink EventSink = new ProtoCore.DebugServices.ConsoleEventSink();
 
-        public ExpressionInterpreterRunner(ProtoCore.Core core)
+        public ExpressionInterpreterRunner(ProtoCore.Core core, ProtoLanguage.CompileStateTracker compileState)
         {
             Core = core;
             core.ExecMode = ProtoCore.DSASM.InterpreterMode.kExpressionInterpreter;
+
+            this.compileState = compileState;
+            compileState.ExecMode = ProtoCore.DSASM.InterpreterMode.kExpressionInterpreter; ;
         }
 
         public bool Compile(string code, out int blockId)
@@ -25,7 +28,7 @@ namespace ProtoScript.Runners
             bool buildSucceeded = false;
             blockId = ProtoCore.DSASM.Constants.kInvalidIndex;
 
-            compileState = ProtoScript.CompilerUtils.BuildDefaultCompilerState();
+            //compileState = ProtoScript.CompilerUtils.BuildDefaultCompilerState();
 
             try
             {
@@ -45,19 +48,19 @@ namespace ProtoScript.Runners
                 compileState.ExprInterpreterExe.iStreamCanvas = new InstructionStream(globalBlock.language, compileState);
 
                 // Save the global offset and restore after compilation
-                int offsetRestore = Core.GlobOffset;
-                Core.GlobOffset = Core.Rmem.Stack.Count;
+                int offsetRestore = compileState.GlobOffset;
+                compileState.GlobOffset = Core.Rmem.Stack.Count;
 
                 compileState.Executives[id].Compile(compileState, out blockId, null, globalBlock, context, EventSink);
 
                 // Restore the global offset
-                Core.GlobOffset = offsetRestore;
+                compileState.GlobOffset = offsetRestore;
 
-                Core.BuildStatus.ReportBuildResult();
+                compileState.BuildStatus.ReportBuildResult();
 
                 int errors = 0;
                 int warnings = 0;
-                buildSucceeded = Core.BuildStatus.GetBuildResult(out errors, out warnings);
+                buildSucceeded = compileState.BuildStatus.GetBuildResult(out errors, out warnings);
             }
             catch (Exception ex)
             {
@@ -81,16 +84,47 @@ namespace ProtoScript.Runners
             //The watchBaseOffset is used to indexing the watch variables and related temporary variables
             Core.watchBaseOffset = 0;
             Core.watchStack.Clear();
+            compileState.watchBaseOffset = 0;
+            compileState.watchStack.Clear();
+
+            compileState.ProcTable = Core.ProcTable;
+            compileState.ClassTable= Core.ClassTable;
+
+
+            compileState.CodeBlockList = Core.DSExecutable.CodeBlockList;
+            compileState.FunctionTable = Core.DSExecutable.FunctionTable;
+            compileState.CompleteCodeBlockList = Core.DSExecutable.CompleteCodeBlockList;
+
+            compileState.Rmem = Core.Rmem;
+
+            compileState.DebugProps = Core.DebugProps;
+
+            //compileState.assocCodegen = Core.assocCodegen;
+
+            compileState.ExecMode = InterpreterMode.kExpressionInterpreter;
 
             bool succeeded = Compile(code, out blockId);
 
             //Clear the warnings and errors so they will not continue impact the next compilation.
             //Fix IDE-662
-            Core.BuildStatus.Errors.Clear();
-            Core.BuildStatus.Warnings.Clear();
+            compileState.BuildStatus.Errors.Clear();
+            compileState.BuildStatus.Warnings.Clear();
 
-            for (int i = 0; i < Core.watchBaseOffset; ++i )
+            for (int i = 0; i < compileState.watchBaseOffset; ++i)
+            {
                 Core.watchStack.Add(StackUtils.BuildNull());
+            }
+
+
+            // Jun: PArt of the compile tracker and core swap
+            // This code that copies watch data from compilestate to core needs cleanup
+            Core.watchBaseOffset = compileState.watchBaseOffset;
+            //Core.watchClassScope = compileState.watchClassScope;
+            //Core.watchFramePointer = compileState.watchFramePointer;
+            //Core.watchFunctionScope = compileState.watchFunctionScope;
+            Core.watchSymbolList = compileState.watchSymbolList;
+
+
 
             //Record the old function call depth
             //Fix IDE-523: part of error for watching non-existing member
@@ -102,7 +136,7 @@ namespace ProtoScript.Runners
             {
 
                 //a2. Record the old start PC for restore instructions
-                Core.startPC = Core.ExprInterpreterExe.instrStreamList[blockId].instrList.Count;
+                Core.startPC = compileState.ExprInterpreterExe.instrStreamList[blockId].instrList.Count;
 
                 compileState.GenerateExprExeInstructions(blockId);
                 Core.ExprInterpreterExe = compileState.ExprInterpreterExe; 
