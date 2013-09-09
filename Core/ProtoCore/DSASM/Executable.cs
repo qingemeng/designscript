@@ -56,6 +56,7 @@ namespace ProtoCore.DSASM
         public List<CodeBlock> CompleteCodeBlockList { get; set; }
         public DynamicVariableTable DynamicVariableTable { get; set; }
         public DynamicFunctionTable DynamicFunctionTable { get; set; }
+        public FunctionPointerTable FunctionPointerTable { get; set; }
 
 
         public Executable()

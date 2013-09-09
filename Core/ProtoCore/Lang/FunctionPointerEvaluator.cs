@@ -22,7 +22,7 @@ namespace ProtoCore.Lang
 
             int fptr = (int)pointer.opdata;
             ProtoCore.DSASM.FunctionPointerNode fptrNode;
-            if (core.FunctionPointerTable.functionPointerDictionary.TryGetByFirst(fptr, out fptrNode))
+            if (core.DSExecutable.FunctionPointerTable.functionPointerDictionary.TryGetByFirst(fptr, out fptrNode))
             {
                 int blockId = fptrNode.blockId;
                 int procId = fptrNode.procId;

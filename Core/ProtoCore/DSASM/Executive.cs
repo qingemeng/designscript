@@ -4442,12 +4442,14 @@ namespace ProtoCore.DSASM
             if (isFunctionPointerCall)
             {
                 ProtoCore.DSASM.FunctionPointerNode fptrNode;
-                if (core.FunctionPointerTable.functionPointerDictionary.TryGetByFirst(fptr, out fptrNode))
+                if (core.DSExecutable.FunctionPointerTable.functionPointerDictionary.TryGetByFirst(fptr, out fptrNode))
                 {
                     int blockId = fptrNode.blockId;
                     int procId = fptrNode.procId;
                     procName = exe.procedureTable[blockId].procList[procId].name;
-                    CodeBlock codeblock = core.GetCodeBlock(core.CodeBlockList, blockId);
+                    CodeBlock codeblock = core.GetCodeBlock(core.DSExecutable.CodeBlockList, blockId);
+
+
                     procNode = core.GetFirstVisibleProcedure(procName, arglist, codeblock);
                     type = ProtoCore.DSASM.Constants.kGlobalScope; //function class scope must be kGlobalScope
                 }
@@ -4538,6 +4540,8 @@ namespace ProtoCore.DSASM
             }
             return false;
         }
+
+      
 
         // helper method for GC
         public void GCRelease(StackValue sv)

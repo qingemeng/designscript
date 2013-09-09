@@ -1286,6 +1286,7 @@ namespace ProtoLanguage
             DSExecutable.CompleteCodeBlockList = CompleteCodeBlockList;
             DSExecutable.DynamicVariableTable = DynamicVariableTable;
             DSExecutable.DynamicFunctionTable = DynamicFunctionTable;
+            DSExecutable.FunctionPointerTable = FunctionPointerTable;
 
             GenerateExprExe();
         }
