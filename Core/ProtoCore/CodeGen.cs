@@ -14,6 +14,7 @@ namespace ProtoCore
     {
         public int bp;
         public int pc;
+public int hello;
     }
 
     public class BackpatchTable
